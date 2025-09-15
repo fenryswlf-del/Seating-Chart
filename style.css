@@ -1,0 +1,66 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #e5e5dc url('https://www.transparenttextures.com/patterns/wood-pattern.png');
+  background-size: 200px;
+}
+
+header {
+  padding: 1em;
+  background: #3e2723;
+  color: white;
+  text-align: center;
+}
+
+.controls {
+  margin-top: 0.5em;
+}
+
+.controls input, .controls button, .controls select {
+  padding: 0.5em;
+  margin: 0.2em;
+  border-radius: 5px;
+  border: none;
+}
+
+.controls button {
+  background: #6d4c41;
+  color: white;
+  cursor: pointer;
+}
+
+main.floor {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1em;
+}
+
+.row {
+  display: flex;
+  justify-content: center;
+  margin: 10px 0;
+}
+
+.table {
+  background: #deb887 url('https://www.transparenttextures.com/patterns/wood.png');
+  background-size: cover;
+  border: 2px solid #5d4037;
+  border-radius: 10px;
+  padding: 10px;
+  margin: 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 90px;
+  box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+}
+
+.table input {
+  margin: 3px 0;
+  padding: 5px;
+  text-align: center;
+  border: 1px solid #999;
+  border-radius: 5px;
+  width: 80px;
+}
