@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seating Chart</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    body { font-family: Arial, sans-serif; padding: 1rem; background: #f8fafc; }
+    h1 { text-align: center; }
+    .class-selector { margin-bottom: 1rem; text-align: center; }
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; justify-items: center; }
+    .table { background: white; border: 2px solid #0ea5e9; border-radius: 0.75rem; padding: 1rem; width: 120px; text-align: center; }
+    .seat { margin: 0.25rem 0; }
+    input { width: 90%; padding: 0.25rem; border: 1px solid #94a3b8; border-radius: 0.5rem; text-align: center; }
+    button { background: #0ea5e9; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Seating Chart</h1>
+  <div class="class-selector">
+    <label for="class">Class: </label>
+    <select id="classSelect"></select>
+    <button onclick="addClass()">+ Add Class</button>
+  </div>
+  <div id="grid" class="grid"></div>
+
+  <script>
+    const gridEl = document.getElementById('grid');
+    const classSelect = document.getElementById('classSelect');
+    let data = JSON.parse(localStorage.getItem('seatingData') || '{}');
+
+    function renderClassOptions() {
+      classSelect.innerHTML = '';
+      Object.keys(data).forEach(cls => {
+        const opt = document.createElement('option');
+        opt.value = cls;
+        opt.textContent = cls;
+        classSelect.appendChild(opt);
+      });
+      if (classSelect.value === '' && Object.keys(data).length > 0) {
+        classSelect.value = Object.keys(data)[0];
+      }
+      renderGrid();
+    }
+
+    function addClass() {
+      const name = prompt('Class name?');
+      if (name && !data[name]) {
+        data[name] = Array.from({ length: 20 }, () => '');
+        save();
+        renderClassOptions();
+      }
+    }
+
+    function renderGrid() {
+      gridEl.innerHTML = '';
+      const cls = classSelect.value;
+      if (!cls) return;
+      data[cls].forEach((student, i) => {
+        const table = document.createElement('div');
+        table.className = 'table';
+        table.innerHTML = \`<div>Seat \${i+1}</div>
+                           <div class="seat"><input value="\${student}" 
+                             oninput="updateName(\${i}, this.value)"></div>\`;
+        gridEl.appendChild(table);
+      });
+    }
+
+    function updateName(index, value) {
+      const cls = classSelect.value;
+      data[cls][index] = value;
+      save();
+    }
+
+    function save() {
+      localStorage.setItem('seatingData', JSON.stringify(data));
+    }
+
+    // Initialize with one default class
+    if (Object.keys(data).length === 0) {
+      data['Class 1'] = Array.from({ length: 20 }, () => '');
+    }
+    renderClassOptions();
+    classSelect.addEventListener('change', renderGrid);
+  </script>
+</body>
+</html>
