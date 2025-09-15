@@ -3,109 +3,116 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Seating Chart</title>
-  <link rel="manifest" href="manifest.json">
-  <style>
-    body { font-family: Arial, sans-serif; padding: 1rem; background: #f8fafc; }
-    h1 { text-align: center; }
-    .class-selector { margin-bottom: 1rem; text-align: center; }
-    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; justify-items: center; }
-    .table { background: white; border: 2px solid #0ea5e9; border-radius: 0.75rem; padding: 1rem; width: 120px; text-align: center; }
-    .seat { margin: 0.25rem 0; }
-    input { width: 90%; padding: 0.25rem; border: 1px solid #94a3b8; border-radius: 0.5rem; text-align: center; }
-    button { background: #0ea5e9; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; margin-top: 1rem; }
-  </style>
+  <title>Classroom Seating Chart</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Seating Chart</h1>
-  <div class="class-selector">
-    <label for="class">Class: </label>
-    <select id="classSelect"></select>
-    <button onclick="addClass()">+ Add Class</button>
-  </div>
-  <div id="grid" class="grid"></div>
+  <header>
+    <h1>Classroom Seating Chart</h1>
+    <div class="controls">
+      <input type="text" id="new-class" placeholder="Enter class name">
+      <button id="add-class">Add Class</button>
+      <select id="class-select">
+        <option value="">Select a class</option>
+      </select>
+    </div>
+  </header>
 
- <script>
-  const gridEl = document.getElementById('grid');
-  const classSelect = document.getElementById('classSelect');
-  const classSelectorDiv = document.querySelector('.class-selector');
-  let data = JSON.parse(localStorage.getItem('seatingData') || '{}');
+  <main id="seating-chart" class="floor">
+    <!-- Seating chart will be generated here -->
+  </main>
 
-  function renderClassOptions() {
-    classSelect.innerHTML = '';
-    Object.keys(data).forEach(cls => {
-      const opt = document.createElement('option');
-      opt.value = cls;
-      opt.textContent = cls;
-      classSelect.appendChild(opt);
+  <script>
+    const seatingChart = document.getElementById('seating-chart');
+    const addClassBtn = document.getElementById('add-class');
+    const newClassInput = document.getElementById('new-class');
+    const classSelect = document.getElementById('class-select');
+
+    const ROWS = 5;
+    const COLS = 4;
+
+    // Load saved data
+    let classes = JSON.parse(localStorage.getItem('classes')) || {};
+    updateClassSelect();
+
+    // Add new class
+    addClassBtn.addEventListener('click', () => {
+      const className = newClassInput.value.trim();
+      if (className && !classes[className]) {
+        classes[className] = createEmptySeating();
+        saveClasses();
+        updateClassSelect();
+        classSelect.value = className;
+        renderSeating(className);
+        newClassInput.value = "";
+      }
+      newClassInput.focus(); // trigger keyboard on phones
     });
-    if (!classSelect.value && Object.keys(data).length > 0) {
-      classSelect.value = Object.keys(data)[0];
-    }
-    renderGrid();
-  }
 
-  function addClass() {
-    // Create an inline input for class name
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.placeholder = 'Enter class name';
-    input.style.marginLeft = '0.5rem';
-    input.autofocus = true;
-    classSelectorDiv.appendChild(input);
-    input.focus();
-
-    // Handle when user presses Enter
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        const name = input.value.trim();
-        if (name && !data[name]) {
-          data[name] = Array.from({ length: 20 }, () => '');
-          save();
-          renderClassOptions();
-          classSelect.value = name;
-          renderGrid();
-        }
-        input.remove();
+    // Switch classes
+    classSelect.addEventListener('change', () => {
+      const className = classSelect.value;
+      if (className) {
+        renderSeating(className);
+      } else {
+        seatingChart.innerHTML = "";
       }
     });
-  }
 
-  function renderGrid() {
-    gridEl.innerHTML = '';
-    const cls = classSelect.value;
-    if (!cls) return;
-    data[cls].forEach((student, i) => {
-      const table = document.createElement('div');
-      table.className = 'table';
-      table.innerHTML = `
-        <div>Seat ${i+1}</div>
-        <div class="seat"><input value="${student}" 
-          oninput="updateName(${i}, this.value)"></div>`;
-      gridEl.appendChild(table);
-    });
-  }
+    // Helpers
+    function createEmptySeating() {
+      const seating = [];
+      for (let r = 0; r < ROWS; r++) {
+        seating[r] = [];
+        for (let c = 0; c < COLS; c++) {
+          seating[r][c] = ["", ""]; // 2 seats per table
+        }
+      }
+      return seating;
+    }
 
-  function updateName(index, value) {
-    const cls = classSelect.value;
-    data[cls][index] = value;
-    save();
-  }
+    function saveClasses() {
+      localStorage.setItem('classes', JSON.stringify(classes));
+    }
 
-  function save() {
-    localStorage.setItem('seatingData', JSON.stringify(data));
-  }
+    function updateClassSelect() {
+      classSelect.innerHTML = '<option value="">Select a class</option>';
+      for (let className in classes) {
+        const option = document.createElement('option');
+        option.value = className;
+        option.textContent = className;
+        classSelect.appendChild(option);
+      }
+    }
 
-  // Initialize with one default class
-  if (Object.keys(data).length === 0) {
-    data['Class 1'] = Array.from({ length: 20 }, () => '');
-    save();
-  }
+    function renderSeating(className) {
+      seatingChart.innerHTML = "";
+      const seating = classes[className];
 
-  renderClassOptions();
-  classSelect.addEventListener('change', renderGrid);
-</script>
+      for (let r = 0; r < ROWS; r++) {
+        const row = document.createElement('div');
+        row.className = 'row';
 
-    
+        for (let c = 0; c < COLS; c++) {
+          const table = document.createElement('div');
+          table.className = 'table';
+
+          for (let s = 0; s < 2; s++) {
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.placeholder = 'Name';
+            input.value = seating[r][c][s];
+            input.addEventListener('input', () => {
+              seating[r][c][s] = input.value;
+              saveClasses();
+            });
+            table.appendChild(input);
+          }
+          row.appendChild(table);
+        }
+        seatingChart.appendChild(row);
+      }
+    }
+  </script>
 </body>
 </html>
