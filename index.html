@@ -25,64 +25,87 @@
   </div>
   <div id="grid" class="grid"></div>
 
-  <script>
-    const gridEl = document.getElementById('grid');
-    const classSelect = document.getElementById('classSelect');
-    let data = JSON.parse(localStorage.getItem('seatingData') || '{}');
+ <script>
+  const gridEl = document.getElementById('grid');
+  const classSelect = document.getElementById('classSelect');
+  const classSelectorDiv = document.querySelector('.class-selector');
+  let data = JSON.parse(localStorage.getItem('seatingData') || '{}');
 
-    function renderClassOptions() {
-      classSelect.innerHTML = '';
-      Object.keys(data).forEach(cls => {
-        const opt = document.createElement('option');
-        opt.value = cls;
-        opt.textContent = cls;
-        classSelect.appendChild(opt);
-      });
-      if (classSelect.value === '' && Object.keys(data).length > 0) {
-        classSelect.value = Object.keys(data)[0];
+  function renderClassOptions() {
+    classSelect.innerHTML = '';
+    Object.keys(data).forEach(cls => {
+      const opt = document.createElement('option');
+      opt.value = cls;
+      opt.textContent = cls;
+      classSelect.appendChild(opt);
+    });
+    if (!classSelect.value && Object.keys(data).length > 0) {
+      classSelect.value = Object.keys(data)[0];
+    }
+    renderGrid();
+  }
+
+  function addClass() {
+    // Create an inline input for class name
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = 'Enter class name';
+    input.style.marginLeft = '0.5rem';
+    input.autofocus = true;
+    classSelectorDiv.appendChild(input);
+    input.focus();
+
+    // Handle when user presses Enter
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const name = input.value.trim();
+        if (name && !data[name]) {
+          data[name] = Array.from({ length: 20 }, () => '');
+          save();
+          renderClassOptions();
+          classSelect.value = name;
+          renderGrid();
+        }
+        input.remove();
       }
-      renderGrid();
-    }
+    });
+  }
 
-    function addClass() {
-      const name = prompt('Class name?');
-      if (name && !data[name]) {
-        data[name] = Array.from({ length: 20 }, () => '');
-        save();
-        renderClassOptions();
-      }
-    }
+  function renderGrid() {
+    gridEl.innerHTML = '';
+    const cls = classSelect.value;
+    if (!cls) return;
+    data[cls].forEach((student, i) => {
+      const table = document.createElement('div');
+      table.className = 'table';
+      table.innerHTML = `
+        <div>Seat ${i+1}</div>
+        <div class="seat"><input value="${student}" 
+          oninput="updateName(${i}, this.value)"></div>`;
+      gridEl.appendChild(table);
+    });
+  }
 
-    function renderGrid() {
-      gridEl.innerHTML = '';
-      const cls = classSelect.value;
-      if (!cls) return;
-      data[cls].forEach((student, i) => {
-        const table = document.createElement('div');
-        table.className = 'table';
-        table.innerHTML = \`<div>Seat \${i+1}</div>
-                           <div class="seat"><input value="\${student}" 
-                             oninput="updateName(\${i}, this.value)"></div>\`;
-        gridEl.appendChild(table);
-      });
-    }
+  function updateName(index, value) {
+    const cls = classSelect.value;
+    data[cls][index] = value;
+    save();
+  }
 
-    function updateName(index, value) {
-      const cls = classSelect.value;
-      data[cls][index] = value;
-      save();
-    }
+  function save() {
+    localStorage.setItem('seatingData', JSON.stringify(data));
+  }
 
-    function save() {
-      localStorage.setItem('seatingData', JSON.stringify(data));
-    }
+  // Initialize with one default class
+  if (Object.keys(data).length === 0) {
+    data['Class 1'] = Array.from({ length: 20 }, () => '');
+    save();
+  }
 
-    // Initialize with one default class
-    if (Object.keys(data).length === 0) {
-      data['Class 1'] = Array.from({ length: 20 }, () => '');
-    }
-    renderClassOptions();
-    classSelect.addEventListener('change', renderGrid);
-  </script>
+  renderClassOptions();
+  classSelect.addEventListener('change', renderGrid);
+</script>
+
+    
 </body>
 </html>
